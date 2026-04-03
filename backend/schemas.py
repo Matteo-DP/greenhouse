@@ -2,13 +2,35 @@ from pydantic import BaseModel
 from datetime import datetime, date, time
 from uuid import UUID
 from typing import Optional, List
+from enum import Enum
+
+
+class DeviceType(str, Enum):
+    SENSOR = "SENSOR"
+    LIGHT = "LIGHT"
+    PUMP = "PUMP"
+    FAN = "FAN"
+
+
+class LogLevel(str, Enum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
+
+
+class AlertSeverity(str, Enum):
+    INFO = "INFO"
+    WARNING = "WARNING"
+    CRITICAL = "CRITICAL"
 
 # ==================== DEVICES ====================
 
 class DeviceBase(BaseModel):
     name: str
     description: Optional[str] = None
-    device_type: str  # SENSOR, LIGHT, PUMP, FAN
+    device_type: DeviceType
     location: Optional[str] = None
 
 class DeviceCreate(DeviceBase):
@@ -33,6 +55,7 @@ class SensorReadingBase(BaseModel):
     value: float
 
 class SensorReadingCreate(SensorReadingBase):
+    sensor_id: UUID
     time: datetime
 
 class SensorReading(SensorReadingBase):
@@ -121,7 +144,7 @@ class WateringScheduleDate(WateringScheduleDateBase):
 # ==================== LOGS ====================
 
 class LogBase(BaseModel):
-    log_level: str  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    log_level: LogLevel
     message: str
 
 class LogCreate(LogBase):
@@ -139,7 +162,7 @@ class Log(LogBase):
 
 class AlertBase(BaseModel):
     alert_type: str
-    severity: str = "INFO"  # INFO, WARNING, CRITICAL
+    severity: AlertSeverity = AlertSeverity.INFO
     message: str
 
 class AlertCreate(AlertBase):
@@ -147,7 +170,7 @@ class AlertCreate(AlertBase):
 
 class AlertUpdate(BaseModel):
     resolved: Optional[bool] = None
-    severity: Optional[str] = None
+    severity: Optional[AlertSeverity] = None
     message: Optional[str] = None
 
 class Alert(AlertBase):

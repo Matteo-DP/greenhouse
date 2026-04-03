@@ -1,34 +1,6 @@
 # Greenhouse Management API
 
-```
-                                 .                          
-                                 M                          
-                                dM                          
-                                MMr                         
-                               4MMML                  .     
-                               MMMMM.                xf     
-               .              "MMMMM               .MM-     
-                Mh..          +MMMMMM            .MMMM      
-                .MMM.         .MMMMML.          MMMMMh      
-                 )MMMh.        MMMMMM         MMMMMMM       
-                  3MMMMx.     'MMMMMMf      xnMMMMMM"       
-                  '*MMMMM      MMMMMM.     nMMMMMMP"        
-                    *MMMMMx    "MMMMM\    .MMMMMMM=         
-                     *MMMMMh   "MMMMM"   JMMMMMMP           
-                       MMMMMM   3MMMM.  dMMMMMM            .
-                        MMMMMM  "MMMM  .MMMMM(        .nnMP"
-            =..          *MMMMx  MMM"  dMMMM"    .nnMMMMM*  
-              "MMn...     'MMMMr 'MM   MMM"   .nMMMMMMM*"   
-               "4MMMMnn..   *MMM  MM  MMP"  .dMMMMMMM""     
-                 ^MMMMMMMMx.  *ML "M .M*  .MMMMMM**"        
-                    *PMMMMMMhn. *x > M  .MMMM**""           
-                       ""**MMMMhx/.h/ .=*"                  
-                                .3P"%....                   
-                              nP"     "*MMnx       
-```
-
-A REST API for managing greenhouse sensors, devices, and automated schedules. Built with FastAPI, PostgreSQL, and TimescaleDB.
-
+A REST API for managing greenhouse sensors, devices, and automated schedules. Built with FastAPI, PostgreSQL, TimescaleDB, and Redis.
 
 
 ### Installation
@@ -72,6 +44,7 @@ Once the server is running, visit:
 - `GET /sensor-readings` - List sensor readings
 - `POST /sensor-readings` - Create a sensor reading
 - `GET /sensor-readings/sensor/{sensor_id}` - Get readings for a sensor
+- `GET /sensor-readings/latest/{sensor_id}` - Get latest reading (Redis cache first)
 
 ### Light Schedules
 - `GET /light-schedules` - List all schedules
@@ -161,7 +134,23 @@ The API uses the following main tables:
 
 ### Running Tests
 ```bash
-pytest
+pytest tests/
+```
+
+Be careful not to run the integration tests on your production stack by running ´pytest` without arguments. This is probably not what you want to do.
+  
+### Integration tests
+
+This runs PostgreSQL + Redis + API + integration tests in one stack.
+
+```bash
+docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from tests
+```
+
+Cleanup after run:
+
+```bash
+docker compose -f docker-compose.test.yml down -v
 ```
 
 ### Database Migrations
@@ -169,16 +158,23 @@ pytest
 alembic upgrade head
 ```
 
-### Code Style
-The project follows PEP 8 and uses type hints throughout.
-
 ## Environment Variables
 
 See `.env.example` for all available configuration options.
+
+
+## Redis Integration
+
+Redis is used for low-latency caching of each sensor's latest reading. Not really worth tbh but fuck it man Redis for the love of the game.
+
+- Cache key format: `sensor:{sensor_id}:latest`
+- Cache is updated on `POST /sensor-readings`
+- `GET /sensor-readings/latest/{sensor_id}` reads Redis first, then falls back to PostgreSQL/TimescaleDB
   
 <br/>
 <br/>
 <br/>
 <br/>
 
-*Made for the ganja*
+
+*4/20*

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from routers import devices, sensor_readings, light_schedules, watering_schedules, logs, alerts
+from redis_client import ping_redis
 
 app = FastAPI(
     title=settings.api_title,
@@ -29,7 +30,11 @@ app.include_router(alerts.router)
 @app.get("/health")
 def health_check():
     """Health check endpoint"""
-    return {"status": "healthy"}
+    redis_ok = ping_redis()
+    return {
+        "status": "healthy" if redis_ok else "degraded",
+        "redis": "up" if redis_ok else "down",
+    }
 
 if __name__ == "__main__":
     import uvicorn
