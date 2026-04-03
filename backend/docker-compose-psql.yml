@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg18
+    container_name: greenhouse-db
+    environment:
+      POSTGRES_USER: greenhouse_user
+      POSTGRES_PASSWORD: greenhouse_password
+      POSTGRES_DB: greenhouse_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U greenhouse_user -d greenhouse_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - greenhouse-network
+
+networks:
+  greenhouse-network:
+    driver: bridge
+    

@@ -1,0 +1,3 @@
+include:
+  - docker-compose-psql.yml
+  - docker-compose-api.yml
