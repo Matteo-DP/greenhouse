@@ -36,6 +36,7 @@ Once the server is running, visit:
 ### Devices
 - `GET /devices` - List all devices
 - `POST /devices` - Create a new device
+  - device_type accepted values: SENSOR (generic sensor), MOISTURE, LIGHT, PUMP, FAN
 - `GET /devices/{device_id}` - Get a device
 - `PUT /devices/{device_id}` - Update a device
 - `DELETE /devices/{device_id}` - Delete a device

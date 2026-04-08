@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS devices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     description TEXT,
-    device_type TEXT NOT NULL CHECK (device_type IN ('SENSOR', 'LIGHT', 'PUMP', 'FAN')),
+    device_type TEXT NOT NULL CHECK (device_type IN ('SENSOR', 'LIGHT', 'PUMP', 'FAN', 'MOISTURE')),
     location TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

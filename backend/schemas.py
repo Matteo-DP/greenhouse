@@ -9,6 +9,7 @@ class DeviceType(str, Enum):
     SENSOR = "SENSOR"
     LIGHT = "LIGHT"
     PUMP = "PUMP"
+    MOISTURE = "MOISTURE"
     FAN = "FAN"
 
 

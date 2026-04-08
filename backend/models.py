@@ -14,13 +14,13 @@ class Device(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
-    device_type = Column(String, nullable=False)  # SENSOR, LIGHT, PUMP, FAN
+    device_type = Column(String, nullable=False)  # SENSOR, LIGHT, PUMP, FAN, MOISTURE
     location = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
     
     __table_args__ = (
-        CheckConstraint("device_type IN ('SENSOR', 'LIGHT', 'PUMP', 'FAN')"),
+        CheckConstraint("device_type IN ('SENSOR', 'LIGHT', 'PUMP', 'FAN', 'MOISTURE')"),
     )
 
 # ==================== SENSOR READINGS ====================
