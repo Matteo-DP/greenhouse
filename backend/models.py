@@ -15,7 +15,9 @@ class Device(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     device_type = Column(String, nullable=False)  # SENSOR, LIGHT, PUMP, FAN, MOISTURE
-    location = Column(String, nullable=True)
+    location = Column(String, nullable=False)
+    firmware = Column(String, nullable=True)
+    unit = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
     

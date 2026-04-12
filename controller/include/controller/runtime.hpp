@@ -21,6 +21,9 @@ public:
 
     bool pollOnce(const std::string& localDeviceId);
     std::size_t pollAllOnce();
+    
+    // gets from db 
+    bool getAndBindNewRemoteSensors();
 
 private:
     struct SensorBinding {

@@ -1,4 +1,86 @@
+#include "controller/generic_sensor.hpp"
+#include "controller/light_sensor.hpp"
+#include "controller/moisture_sensor.hpp"
 #include "controller/runtime.hpp"
+
+#include <nlohmann/json.hpp>
+
+#include <memory>
+#include <optional>
+#include <string>
+
+namespace {
+
+std::optional<greenhouse::DeviceType> parseRemoteDeviceType(const std::string& deviceType) {
+    using greenhouse::DeviceType;
+
+    if (deviceType == "SENSOR") {
+        return DeviceType::SENSOR;
+    }
+    if (deviceType == "MOISTURE") {
+        return DeviceType::MOISTURE;
+    }
+    if (deviceType == "LIGHT") {
+        return DeviceType::LIGHT;
+    }
+    return std::nullopt;
+}
+
+std::string jsonStringOrEmpty(const nlohmann::json& object, const char* key) {
+    const auto it = object.find(key);
+    if (it == object.end() || it->is_null()) {
+        return {};
+    }
+
+    if (it->is_string()) {
+        return it->get<std::string>();
+    }
+
+    return it->dump();
+}
+
+std::unique_ptr<greenhouse::Device> makeLocalDeviceFromRemote(const nlohmann::json& remoteDevice) {
+    if (!remoteDevice.contains("id") || !remoteDevice["id"].is_string()) {
+        return nullptr;
+    }
+
+    const auto deviceId = remoteDevice["id"].get<std::string>();
+    const auto name = jsonStringOrEmpty(remoteDevice, "name");
+    const auto location = jsonStringOrEmpty(remoteDevice, "location");
+    const auto typeValue = jsonStringOrEmpty(remoteDevice, "device_type");
+    const auto deviceType = parseRemoteDeviceType(typeValue);
+    if (!deviceType.has_value()) {
+        return nullptr;
+    }
+
+    using greenhouse::DeviceType;
+    switch (*deviceType) {
+    case DeviceType::SENSOR:
+        return std::make_unique<greenhouse::GenericSensor>(deviceId, name, location, "unknown");
+    case DeviceType::MOISTURE:
+        return std::make_unique<greenhouse::MoistureSensor>(deviceId, name, location);
+    case DeviceType::LIGHT:
+        return std::make_unique<greenhouse::LightSensor>(deviceId, name, location);
+    }
+
+    return nullptr;
+}
+
+bool devicesMatchRemote(const greenhouse::Device& device, const nlohmann::json& remoteDevice) {
+    const auto remoteType = parseRemoteDeviceType(jsonStringOrEmpty(remoteDevice, "device_type"));
+    if (!remoteType.has_value()) {
+        return false;
+    }
+
+    if (device.type() != *remoteType) {
+        return false;
+    }
+
+    return device.name() == jsonStringOrEmpty(remoteDevice, "name")
+        && device.location() == jsonStringOrEmpty(remoteDevice, "location");
+}
+
+} // namespace
 
 namespace greenhouse {
 
@@ -26,6 +108,63 @@ bool SensorRuntime::bindSensor(
     };
 
     return true;
+}
+
+bool SensorRuntime::getAndBindNewRemoteSensors() {
+    const auto devicesJson = apiClient_.getDevices();
+    if (!devicesJson.has_value()) {
+        return false;
+    }
+
+    const auto parsed = nlohmann::json::parse(*devicesJson, nullptr, false);
+    if (parsed.is_discarded() || !parsed.is_array()) {
+        return false;
+    }
+
+    bool changed = false;
+
+    for (const auto& remoteDevice : parsed) {
+        if (!remoteDevice.is_object()) {
+            continue;
+        }
+
+        const auto remoteId = jsonStringOrEmpty(remoteDevice, "id");
+        if (remoteId.empty()) {
+            continue;
+        }
+
+        const Device* matchingDevice = nullptr;
+        for (const auto* localDevice : controller_.listDevices()) {
+            if (devicesMatchRemote(*localDevice, remoteDevice)) {
+                matchingDevice = localDevice;
+                break;
+            }
+        }
+
+        if (matchingDevice) {
+            auto bindingIt = bindings_.find(matchingDevice->id());
+            if (bindingIt != bindings_.end() && bindingIt->second.remoteSensorId != remoteId) {
+                bindingIt->second.remoteSensorId = remoteId;
+                changed = true;
+            }
+            continue;
+        }
+
+        if (controller_.findDevice(remoteId)) {
+            continue;
+        }
+
+        auto localDevice = makeLocalDeviceFromRemote(remoteDevice);
+        if (!localDevice) {
+            continue;
+        }
+
+        if (controller_.registerDevice(std::move(localDevice))) {
+            changed = true;
+        }
+    }
+
+    return changed;
 }
 
 bool SensorRuntime::pollOnce(const std::string& localDeviceId) {

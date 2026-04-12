@@ -17,9 +17,11 @@ CREATE TABLE IF NOT EXISTS devices (
     name TEXT NOT NULL,
     description TEXT,
     device_type TEXT NOT NULL CHECK (device_type IN ('SENSOR', 'LIGHT', 'PUMP', 'FAN', 'MOISTURE')),
-    location TEXT,
+    location TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    firmware TEXT,
+    unit TEXT
 );
 
 -- Create hypertable for efficient time-series storage

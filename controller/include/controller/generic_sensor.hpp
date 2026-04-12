@@ -13,9 +13,11 @@ public:
         std::string name,
         std::string location,
         std::string readingUnit,
+        std::string firmware,
         std::optional<double> minValue = std::nullopt,
-        std::optional<double> maxValue = std::nullopt)
-        : SensorDevice(std::move(id), std::move(name), std::move(location)),
+        std::optional<double> maxValue = std::nullopt
+    )
+        : SensorDevice(std::move(id), std::move(name), std::move(location), std::move(firmware)),
           readingUnit_(std::move(readingUnit)),
           minValue_(minValue),
           maxValue_(maxValue) {}

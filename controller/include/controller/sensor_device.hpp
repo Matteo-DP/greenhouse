@@ -10,8 +10,8 @@ namespace greenhouse {
 
 class SensorDevice : public Device {
 public:
-    SensorDevice(std::string id, std::string name, std::string location)
-        : Device(std::move(id), std::move(name), std::move(location)) {}
+    SensorDevice(std::string id, std::string name, std::string location, std::string firmware)
+        : Device(std::move(id), std::move(name), std::move(location), std::move(firmware)) {}
 
     ~SensorDevice() override = default;
 
@@ -23,7 +23,12 @@ public:
             return false;
         }
 
-        readings_.push_back(SensorReading{.deviceId = id(), .timestamp = timestamp, .value = value, .unit = unit()});
+        SensorReading reading;
+        reading.deviceId = id();
+        reading.timestamp = timestamp;
+        reading.value = value;
+        reading.unit = unit();
+        readings_.push_back(std::move(reading));
         return true;
     }
 

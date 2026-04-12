@@ -32,7 +32,9 @@ class DeviceBase(BaseModel):
     name: str
     description: Optional[str] = None
     device_type: DeviceType
-    location: Optional[str] = None
+    location: str = None
+    firmware: Optional[str] = None
+    unit: Optional[str] = None
 
 class DeviceCreate(DeviceBase):
     pass
@@ -40,7 +42,9 @@ class DeviceCreate(DeviceBase):
 class DeviceUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    location: Optional[str] = None
+    location: str = None
+    firmware: Optional[str] = None
+    unit: Optional[str] = None
 
 class Device(DeviceBase):
     id: UUID
