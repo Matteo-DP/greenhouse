@@ -29,6 +29,14 @@ public:
         std::chrono::system_clock::time_point timestamp = std::chrono::system_clock::now());
 
     [[nodiscard]] std::optional<SensorReading> latestReading(const std::string& deviceId) const;
+    
+    [[nodiscard]] std::string printDevices() const {
+        std::string result;
+        for (const auto& pair : devices_) {
+            result += pair.second->toString() + "\n";
+        }
+        return result;
+    }
 
 private:
     std::unordered_map<std::string, std::unique_ptr<Device>> devices_;

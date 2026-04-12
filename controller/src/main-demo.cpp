@@ -32,46 +32,46 @@ std::string formatTimestamp(std::chrono::system_clock::time_point tp) {
 } // namespace
 
 int main() {
-    using namespace greenhouse;
+    // using namespace greenhouse;
 
-    GreenhouseController controller;
-    RestApiClient apiClient("http://localhost:8000");
-    SensorRuntime runtime(controller, apiClient);
+    // GreenhouseController controller;
+    // RestApiClient apiClient("http://localhost:8000");
+    // SensorRuntime runtime(controller, apiClient);
 
-    controller.registerDevice(std::make_unique<GenericSensor>(
-        "sensor-temp-1",
-        "Ambient Temperature",
-        "Greenhouse A",
-        "C",
-        -20.0,
-        80.0));
+    // controller.registerDevice(std::make_unique<GenericSensor>(
+    //     "sensor-temp-1",
+    //     "Ambient Temperature",
+    //     "Greenhouse A",
+    //     "C",
+    //     -20.0,
+    //     80.0));
 
-    controller.registerDevice(std::make_unique<MoistureSensor>(
-        "sensor-moisture-1",
-        "Soil Moisture",
-        "Bed 2"));
+    // controller.registerDevice(std::make_unique<MoistureSensor>(
+    //     "sensor-moisture-1",
+    //     "Soil Moisture",
+    //     "Bed 2"));
 
-    controller.registerDevice(std::make_unique<LightSensor>(
-        "sensor-light-1",
-        "Sunlight Sensor",
-        "North Wall"));
+    // controller.registerDevice(std::make_unique<LightSensor>(
+    //     "sensor-light-1",
+    //     "Sunlight Sensor",
+    //     "North Wall"));
 
-    const std::size_t pushedCount = runtime.pollAllOnce();
-    std::cout << "Pushed readings to API for " << pushedCount << " sensor(s).\n";
+    // const std::size_t pushedCount = runtime.pollAllOnce();
+    // std::cout << "Pushed readings to API for " << pushedCount << " sensor(s).\n";
 
-    for (const auto* device : controller.listDevices()) {
-        const auto reading = controller.latestReading(device->id());
-        if (!reading) {
-            continue;
-        }
+    // for (const auto* device : controller.listDevices()) {
+    //     const auto reading = controller.latestReading(device->id());
+    //     if (!reading) {
+    //         continue;
+    //     }
 
-        std::cout
-            << device->id() << " | "
-            << device->name() << " | "
-            << reading->value << " " << reading->unit << " | "
-            << formatTimestamp(reading->timestamp)
-            << '\n';
-    }
+    //     std::cout
+    //         << device->id() << " | "
+    //         << device->name() << " | "
+    //         << reading->value << " " << reading->unit << " | "
+    //         << formatTimestamp(reading->timestamp)
+    //         << '\n';
+    // }
 
     return 0;
 }

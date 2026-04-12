@@ -3,6 +3,7 @@
 #include "controller/api_client.hpp"
 #include "controller/controller.hpp"
 #include "controller/hardware_sensor.hpp"
+#include "controller/logger.hpp"
 
 #include <memory>
 #include <string>
@@ -12,8 +13,8 @@ namespace greenhouse {
 
 class SensorRuntime {
 public:
-    SensorRuntime(GreenhouseController& controller, ApiClient& apiClient)
-        : controller_(controller), apiClient_(apiClient) {}
+    SensorRuntime(GreenhouseController& controller, ApiClient& apiClient, std::shared_ptr<Logger> logger)
+        : controller_(controller), apiClient_(apiClient), logger_(logger) {}
 
     // localDeviceId: device id in this C++ process
     // remoteSensorId: UUID from backend /devices table
@@ -34,6 +35,7 @@ private:
     GreenhouseController& controller_;
     ApiClient& apiClient_;
     std::unordered_map<std::string, SensorBinding> bindings_;
+    std::shared_ptr<Logger> logger_;
 };
 
 } // namespace greenhouse

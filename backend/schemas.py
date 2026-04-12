@@ -33,7 +33,7 @@ class DeviceBase(BaseModel):
     description: Optional[str] = None
     device_type: DeviceType
     location: str = None
-    firmware: Optional[str] = None
+    firmware: str = None
     unit: Optional[str] = None
 
 class DeviceCreate(DeviceBase):

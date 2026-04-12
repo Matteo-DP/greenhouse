@@ -2,6 +2,7 @@
 #include "controller/light_sensor.hpp"
 #include "controller/moisture_sensor.hpp"
 #include "controller/runtime.hpp"
+#include "utils.cpp"
 
 #include <nlohmann/json.hpp>
 
@@ -26,29 +27,23 @@ std::optional<greenhouse::DeviceType> parseRemoteDeviceType(const std::string& d
     return std::nullopt;
 }
 
-std::string jsonStringOrEmpty(const nlohmann::json& object, const char* key) {
-    const auto it = object.find(key);
-    if (it == object.end() || it->is_null()) {
-        return {};
-    }
-
-    if (it->is_string()) {
-        return it->get<std::string>();
-    }
-
-    return it->dump();
-}
 
 std::unique_ptr<greenhouse::Device> makeLocalDeviceFromRemote(const nlohmann::json& remoteDevice) {
     if (!remoteDevice.contains("id") || !remoteDevice["id"].is_string()) {
         return nullptr;
     }
 
+    using namespace Utils;
     const auto deviceId = remoteDevice["id"].get<std::string>();
     const auto name = jsonStringOrEmpty(remoteDevice, "name");
     const auto location = jsonStringOrEmpty(remoteDevice, "location");
     const auto typeValue = jsonStringOrEmpty(remoteDevice, "device_type");
+    const auto unit = jsonStringOrEmpty(remoteDevice, "unit");
     const auto deviceType = parseRemoteDeviceType(typeValue);
+    const std::string firmware = jsonStringOrEmpty(remoteDevice, "firmware");
+    if (firmware.empty()) {
+        return nullptr;
+    }
     if (!deviceType.has_value()) {
         return nullptr;
     }
@@ -56,17 +51,20 @@ std::unique_ptr<greenhouse::Device> makeLocalDeviceFromRemote(const nlohmann::js
     using greenhouse::DeviceType;
     switch (*deviceType) {
     case DeviceType::SENSOR:
-        return std::make_unique<greenhouse::GenericSensor>(deviceId, name, location, "unknown");
+        return std::make_unique<greenhouse::GenericSensor>(
+            deviceId, name, location, unit.empty() ? "unknown" : unit, firmware);
     case DeviceType::MOISTURE:
-        return std::make_unique<greenhouse::MoistureSensor>(deviceId, name, location);
+        return std::make_unique<greenhouse::MoistureSensor>(deviceId, name, location, firmware);
     case DeviceType::LIGHT:
-        return std::make_unique<greenhouse::LightSensor>(deviceId, name, location);
+        return std::make_unique<greenhouse::LightSensor>(deviceId, name, location, firmware);
     }
 
     return nullptr;
 }
 
 bool devicesMatchRemote(const greenhouse::Device& device, const nlohmann::json& remoteDevice) {
+    using namespace Utils;
+
     const auto remoteType = parseRemoteDeviceType(jsonStringOrEmpty(remoteDevice, "device_type"));
     if (!remoteType.has_value()) {
         return false;
@@ -111,6 +109,8 @@ bool SensorRuntime::bindSensor(
 }
 
 bool SensorRuntime::getAndBindNewRemoteSensors() {
+    using namespace Utils;
+
     const auto devicesJson = apiClient_.getDevices();
     if (!devicesJson.has_value()) {
         return false;

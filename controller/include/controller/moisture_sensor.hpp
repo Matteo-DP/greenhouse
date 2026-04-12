@@ -6,8 +6,8 @@ namespace greenhouse {
 
 class MoistureSensor final : public SensorDevice {
 public:
-    MoistureSensor(std::string id, std::string name, std::string location)
-        : SensorDevice(std::move(id), std::move(name), std::move(location)) {}
+    MoistureSensor(std::string id, std::string name, std::string location, std::string firmware)
+        : SensorDevice(std::move(id), std::move(name), std::move(location), std::move(firmware)) {}
 
     [[nodiscard]] DeviceType type() const noexcept override { return DeviceType::MOISTURE; }
 

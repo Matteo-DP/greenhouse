@@ -22,6 +22,10 @@ public:
     void setEnabled(bool enabled) noexcept { enabled_ = enabled; }
 
     [[nodiscard]] virtual DeviceType type() const noexcept = 0;
+    
+    [[nodiscard]] virtual std::string toString() const {
+        return "Device{id='" + id_ + "', name='" + name_ + "', location='" + location_ + "', firmware='" + firmware_ + "'}";
+    };
 
 private:
     std::string id_;
