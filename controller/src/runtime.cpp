@@ -90,16 +90,6 @@ bool SensorRuntime::bindSensor(
         return false;
     }
 
-    const Device* device = controller_.findDevice(localDeviceId);
-    if (!device) {
-        return false;
-    }
-
-    auto* sensor = dynamic_cast<const SensorDevice*>(device);
-    if (!sensor) {
-        return false;
-    }
-
     bindings_[std::move(localDeviceId)] = SensorBinding{
         .remoteSensorId = std::move(remoteSensorId),
         .device = std::move(hardware),
@@ -108,10 +98,37 @@ bool SensorRuntime::bindSensor(
     return true;
 }
 
+std::vector<const SensorDevice*> SensorRuntime::listDevices() const {
+    std::vector<const SensorDevice*> devices;
+    for (const auto& [_, binding] : bindings_) {
+        devices.push_back(binding.device.get());
+    }
+    return devices;
+}
+
+std::vector<const SensorDevice*> SensorRuntime::listDevicesByType(DeviceType type) const {
+    std::vector<const SensorDevice*> devices;
+    for (const auto& [_, binding] : bindings_) {
+        if (binding.device->type() == type) {
+            devices.push_back(binding.device.get());
+        }
+    }
+    return devices;
+}
+
+const SensorDevice* SensorRuntime::findDevice(const std::string& deviceId) const {
+    for (const auto& [_, binding] : bindings_) {
+        if (binding.device->id() == deviceId) {
+            return binding.device.get();
+        }
+    }
+    return nullptr;
+}
+
 bool SensorRuntime::getAndBindNewRemoteSensors() {
     using namespace Utils;
 
-    const auto devicesJson = apiClient_.getDevices();
+    const auto devicesJson = apiClient_->getDevices();
     if (!devicesJson.has_value()) {
         return false;
     }
@@ -133,8 +150,8 @@ bool SensorRuntime::getAndBindNewRemoteSensors() {
             continue;
         }
 
-        const Device* matchingDevice = nullptr;
-        for (const auto* localDevice : controller_.listDevices()) {
+        const SensorDevice* matchingDevice = nullptr;
+        for (const auto* localDevice : this->listDevices()) {
             // if (devicesMatchRemote(*localDevice, remoteDevice)) {
             //     matchingDevice = localDevice;
             //     break;
@@ -154,17 +171,21 @@ bool SensorRuntime::getAndBindNewRemoteSensors() {
             continue;
         }
 
-        if (controller_.findDevice(remoteId)) {
+        if (this->findDevice(remoteId)) {
             continue;
         }
 
         // auto localDevice = makeLocalDeviceFromRemote(remoteDevice);
-        auto localDevice = Device::fromJson(remoteDevice);
+        auto localDevice = SensorDevice::fromJson(remoteDevice);
         if (!localDevice) {
             continue;
         }
 
-        if (controller_.registerDevice(std::move(localDevice))) {
+        // if (controller_.registerDevice(std::move(localDevice))) {
+        //     changed = true;
+        // }
+        const auto localDeviceId = localDevice->id();
+        if (this->bindSensor(localDeviceId, remoteId, std::move(localDevice))) {
             changed = true;
         }
     }
@@ -172,27 +193,65 @@ bool SensorRuntime::getAndBindNewRemoteSensors() {
     return changed;
 }
 
+std::size_t SensorRuntime::flushReadingsForDevice(const std::string& localDeviceId) {
+    const auto bindingIt = bindings_.find(localDeviceId);
+    if (bindingIt == bindings_.end()) {
+        return 0;
+    }
+    std::unique_ptr<SensorDevice>& device = bindingIt->second.device;
+    // for (const auto& reading : readings) {
+    //     if (!apiClient_->postSensorReading(bindingIt->second.remoteSensorId, reading)) {
+    //         ++successCount;
+    //         // remove reading from memory
+    //         // cant: not with this type of loop
+    //     }
+    // }
+    std::size_t successCount = 0;
+    auto &readings = device->readings();
+    for (auto it = readings.begin(); it != readings.end(); ) {
+        if (apiClient_->postSensorReading(bindingIt->second.remoteSensorId, *it)) {
+            it = readings.erase(it);  // already moves to next
+            ++successCount;
+        } else {
+            ++it;
+        }
+    }
+    return successCount;
+}
+
+std::size_t SensorRuntime::flushReadingsForAllDevices() {
+    std::size_t successCount = 0;
+    for (const auto& [localDeviceId, _] : bindings_) {
+        successCount += flushReadingsForDevice(localDeviceId);
+    }
+    return successCount;
+}
+
 bool SensorRuntime::pollOnce(const std::string& localDeviceId) {
     const auto bindingIt = bindings_.find(localDeviceId);
     if (bindingIt == bindings_.end()) {
         return false;
     }
+    std::unique_ptr<SensorDevice>& device = bindingIt->second.device;
+    
+    if (device->recordReading()) return true;
+    return false;
 
-    double value = 0.0;
-    if (!bindingIt->second.device->hardware()->read(value)) {
-        return false;
-    }
+    // double value = 0.0;
+    // if (!bindingIt->second.device->hardware()->read(value)) {
+    //     return false;
+    // }
 
-    if (!controller_.recordSensorReading(localDeviceId, value)) {
-        return false;
-    }
+    // if (!controller_.recordSensorReading(localDeviceId, value)) {
+    //     return false;
+    // }
 
-    const auto reading = controller_.latestReading(localDeviceId);
-    if (!reading.has_value()) {
-        return false;
-    }
+    // const auto reading = controller_.latestReading(localDeviceId);
+    // if (!reading.has_value()) {
+    //     return false;
+    // }
 
-    return apiClient_.postSensorReading(bindingIt->second.remoteSensorId, *reading);
+    // return apiClient_.postSensorReading(bindingIt->second.remoteSensorId, *reading);
 }
 
 std::size_t SensorRuntime::pollAllOnce() {

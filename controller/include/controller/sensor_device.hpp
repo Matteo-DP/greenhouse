@@ -24,26 +24,22 @@ public:
     
     static std::unique_ptr<HardwareSensor> getFirmwareByName(const std::string& firmware) {
         // TODO: actually return different HardwareSensor implementations based on the firmware string. For now, return a dummy one.
-        return std::make_unique<FixedValueSensor>();
+        return std::make_unique<FixedValueSensor>(69.00);
     }
 
     bool recordReading() {
         const auto timestamp = std::chrono::system_clock::now();
-        std::optional<double> value;
+        double value = 0.0;
         
         if (this->hardware_ == nullptr) {
             return false;
         }
 
-        if (!this->hardware_->read(*value)) {
-            return false;
-        }
-        
-        if (!value.has_value()) {
+        if (!this->hardware_->read(value)) {
             return false;
         }
 
-        if (!validateValue(*value) || !enabled()) {
+        if (!validateValue(value) || !enabled()) {
             return false;
         }
 
@@ -52,7 +48,7 @@ public:
         // store readings based on database Id 
         // reading.deviceId = remoteDeviceId;
         reading.timestamp = timestamp;
-        reading.value = *value;
+        reading.value = value;
         readings_.push_back(std::move(reading));
         return true;
     }
@@ -64,8 +60,11 @@ public:
         return readings_.back();
     }
 
-    [[nodiscard]] const std::vector<SensorReading>& readings() const noexcept { return readings_; }
+    [[nodiscard]] std::vector<SensorReading>& readings() noexcept { return readings_; }
     [[nodiscard]] const std::unique_ptr<HardwareSensor>& hardware() const noexcept { return hardware_; }
+
+    // Device factory
+    [[nodiscard]] static std::unique_ptr<SensorDevice> fromJson(const nlohmann::json& remoteDevice);
 
 private:
     std::vector<SensorReading> readings_;

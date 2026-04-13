@@ -36,7 +36,7 @@ public:
     };
     
     // Device factory
-    [[nodiscard]] static std::unique_ptr<Device> fromJson(const nlohmann::json& remoteDevice);
+    // [[nodiscard]] static std::unique_ptr<Device> fromJson(const nlohmann::json& remoteDevice);
 
     // compare with remote Device
     bool operator==(const nlohmann::json& remoteDevice) const {

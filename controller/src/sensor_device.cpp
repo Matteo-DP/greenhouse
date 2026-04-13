@@ -1,11 +1,11 @@
-#include "controller/device.hpp"
+#include "controller/sensor_device.hpp"
 #include "controller/generic_sensor.hpp"
 #include "controller/light_sensor.hpp"
 #include "controller/moisture_sensor.hpp"
 
 namespace greenhouse {
 
-std::unique_ptr<Device> Device::fromJson(const nlohmann::json& remoteDevice) {
+std::unique_ptr<SensorDevice> SensorDevice::fromJson(const nlohmann::json& remoteDevice) {
     if (!remoteDevice.contains("id") || !remoteDevice["id"].is_string()) {
         return nullptr;
     }
