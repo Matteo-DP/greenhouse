@@ -2,7 +2,9 @@
 
 #include "controller/device_type.hpp"
 
+#include <nlohmann/json.hpp>
 #include <string>
+#include "controller/utils.hpp"
 
 namespace greenhouse {
 
@@ -24,8 +26,34 @@ public:
     [[nodiscard]] virtual DeviceType type() const noexcept = 0;
     
     [[nodiscard]] virtual std::string toString() const {
-        return "Device{id='" + id_ + "', name='" + name_ + "', location='" + location_ + "', firmware='" + firmware_ + "'}";
+        std::string str;
+        str += "Device ID: " + id() + "\n";
+        str += "Name: " + name() + "\n";
+        str += "Location: " + location() + "\n";
+        str += "Firmware: " + firmware() + "\n";
+        str += "Type: " + deviceTypeToString(type()) + "\n";
+        return str;
     };
+    
+    // Device factory
+    [[nodiscard]] static std::unique_ptr<Device> fromJson(const nlohmann::json& remoteDevice);
+
+    // compare with remote Device
+    bool operator==(const nlohmann::json& remoteDevice) const {
+        using namespace Utils;
+
+        const auto remoteType = greenhouse::parseRemoteDeviceType(jsonStringOrEmpty(remoteDevice, "device_type"));
+        if (!remoteType.has_value()) {
+            return false;
+        }
+
+        if (this->type() != *remoteType) {
+            return false;
+        }
+
+        return this->name() == jsonStringOrEmpty(remoteDevice, "name");
+    }
+    
 
 private:
     std::string id_;

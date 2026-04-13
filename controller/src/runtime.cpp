@@ -2,7 +2,7 @@
 #include "controller/light_sensor.hpp"
 #include "controller/moisture_sensor.hpp"
 #include "controller/runtime.hpp"
-#include "utils.cpp"
+#include "controller/utils.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -12,71 +12,71 @@
 
 namespace {
 
-std::optional<greenhouse::DeviceType> parseRemoteDeviceType(const std::string& deviceType) {
-    using greenhouse::DeviceType;
+// std::optional<greenhouse::DeviceType> parseRemoteDeviceType(const std::string& deviceType) {
+//     using greenhouse::DeviceType;
 
-    if (deviceType == "SENSOR") {
-        return DeviceType::SENSOR;
-    }
-    if (deviceType == "MOISTURE") {
-        return DeviceType::MOISTURE;
-    }
-    if (deviceType == "LIGHT") {
-        return DeviceType::LIGHT;
-    }
-    return std::nullopt;
-}
+//     if (deviceType == "SENSOR") {
+//         return DeviceType::SENSOR;
+//     }
+//     if (deviceType == "MOISTURE") {
+//         return DeviceType::MOISTURE;
+//     }
+//     if (deviceType == "LIGHT") {
+//         return DeviceType::LIGHT;
+//     }
+//     return std::nullopt;
+// }
 
 
-std::unique_ptr<greenhouse::Device> makeLocalDeviceFromRemote(const nlohmann::json& remoteDevice) {
-    if (!remoteDevice.contains("id") || !remoteDevice["id"].is_string()) {
-        return nullptr;
-    }
+// std::unique_ptr<greenhouse::Device> makeLocalDeviceFromRemote(const nlohmann::json& remoteDevice) {
+//     if (!remoteDevice.contains("id") || !remoteDevice["id"].is_string()) {
+//         return nullptr;
+//     }
 
-    using namespace Utils;
-    const auto deviceId = remoteDevice["id"].get<std::string>();
-    const auto name = jsonStringOrEmpty(remoteDevice, "name");
-    const auto location = jsonStringOrEmpty(remoteDevice, "location");
-    const auto typeValue = jsonStringOrEmpty(remoteDevice, "device_type");
-    const auto unit = jsonStringOrEmpty(remoteDevice, "unit");
-    const auto deviceType = parseRemoteDeviceType(typeValue);
-    const std::string firmware = jsonStringOrEmpty(remoteDevice, "firmware");
-    if (firmware.empty()) {
-        return nullptr;
-    }
-    if (!deviceType.has_value()) {
-        return nullptr;
-    }
+//     using namespace Utils;
+//     const auto deviceId = remoteDevice["id"].get<std::string>();
+//     const auto name = jsonStringOrEmpty(remoteDevice, "name");
+//     const auto location = jsonStringOrEmpty(remoteDevice, "location");
+//     const auto typeValue = jsonStringOrEmpty(remoteDevice, "device_type");
+//     const auto unit = jsonStringOrEmpty(remoteDevice, "unit");
+//     const auto deviceType = parseRemoteDeviceType(typeValue);
+//     const std::string firmware = jsonStringOrEmpty(remoteDevice, "firmware");
+//     if (firmware.empty()) {
+//         return nullptr;
+//     }
+//     if (!deviceType.has_value()) {
+//         return nullptr;
+//     }
 
-    using greenhouse::DeviceType;
-    switch (*deviceType) {
-    case DeviceType::SENSOR:
-        return std::make_unique<greenhouse::GenericSensor>(
-            deviceId, name, location, unit.empty() ? "unknown" : unit, firmware);
-    case DeviceType::MOISTURE:
-        return std::make_unique<greenhouse::MoistureSensor>(deviceId, name, location, firmware);
-    case DeviceType::LIGHT:
-        return std::make_unique<greenhouse::LightSensor>(deviceId, name, location, firmware);
-    }
+//     using greenhouse::DeviceType;
+//     switch (*deviceType) {
+//     case DeviceType::SENSOR:
+//         return std::make_unique<greenhouse::GenericSensor>(
+//             deviceId, name, location, unit.empty() ? "unknown" : unit, firmware);
+//     case DeviceType::MOISTURE:
+//         return std::make_unique<greenhouse::MoistureSensor>(deviceId, name, location, firmware);
+//     case DeviceType::LIGHT:
+//         return std::make_unique<greenhouse::LightSensor>(deviceId, name, location, firmware);
+//     }
 
-    return nullptr;
-}
+//     return nullptr;
+// }
 
-bool devicesMatchRemote(const greenhouse::Device& device, const nlohmann::json& remoteDevice) {
-    using namespace Utils;
+// bool devicesMatchRemote(const greenhouse::Device& device, const nlohmann::json& remoteDevice) {
+//     using namespace Utils;
 
-    const auto remoteType = parseRemoteDeviceType(jsonStringOrEmpty(remoteDevice, "device_type"));
-    if (!remoteType.has_value()) {
-        return false;
-    }
+//     const auto remoteType = parseRemoteDeviceType(jsonStringOrEmpty(remoteDevice, "device_type"));
+//     if (!remoteType.has_value()) {
+//         return false;
+//     }
 
-    if (device.type() != *remoteType) {
-        return false;
-    }
+//     if (device.type() != *remoteType) {
+//         return false;
+//     }
 
-    return device.name() == jsonStringOrEmpty(remoteDevice, "name")
-        && device.location() == jsonStringOrEmpty(remoteDevice, "location");
-}
+//     return device.name() == jsonStringOrEmpty(remoteDevice, "name")
+//         && device.location() == jsonStringOrEmpty(remoteDevice, "location");
+// }
 
 } // namespace
 
@@ -135,7 +135,11 @@ bool SensorRuntime::getAndBindNewRemoteSensors() {
 
         const Device* matchingDevice = nullptr;
         for (const auto* localDevice : controller_.listDevices()) {
-            if (devicesMatchRemote(*localDevice, remoteDevice)) {
+            // if (devicesMatchRemote(*localDevice, remoteDevice)) {
+            //     matchingDevice = localDevice;
+            //     break;
+            // }
+            if (*localDevice == remoteDevice) {
                 matchingDevice = localDevice;
                 break;
             }
@@ -154,7 +158,8 @@ bool SensorRuntime::getAndBindNewRemoteSensors() {
             continue;
         }
 
-        auto localDevice = makeLocalDeviceFromRemote(remoteDevice);
+        // auto localDevice = makeLocalDeviceFromRemote(remoteDevice);
+        auto localDevice = Device::fromJson(remoteDevice);
         if (!localDevice) {
             continue;
         }

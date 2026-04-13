@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
 -- Device configuration table
 CREATE TABLE IF NOT EXISTS devices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
     description TEXT,
     device_type TEXT NOT NULL CHECK (device_type IN ('SENSOR', 'LIGHT', 'PUMP', 'FAN', 'MOISTURE')),
     location TEXT NOT NULL,

@@ -1,0 +1,352 @@
+@startuml greenhouse_class_diagram
+hide empty members
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+left to right direction
+
+title Greenhouse Project - Class Diagram (Backend + Controller)
+
+package "backend.config" {
+  class "Settings" as B_Settings {
+    +database_url: str
+    +redis_url: str
+    +redis_sensor_cache_ttl_seconds: int
+    +api_title: str
+    +api_version: str
+    +debug: bool
+  }
+}
+
+package "backend.models (SQLAlchemy)" {
+  class "Device" as BM_Device {
+    +id: UUID
+    +name: str
+    +description: str?
+    +device_type: str
+    +location: str
+    +firmware: str?
+    +unit: str?
+    +created_at: datetime
+    +updated_at: datetime
+  }
+
+  class "SensorReading" as BM_SensorReading {
+    +time: datetime
+    +sensor_id: UUID
+    +value: float
+  }
+
+  class "LightSchedule" as BM_LightSchedule {
+    +id: UUID
+    +name: str
+    +description: str?
+    +light_on_start: time?
+    +light_on_end: time?
+    +brightness_level: int
+  }
+
+  class "LightScheduleDate" as BM_LightScheduleDate {
+    +schedule_id: UUID
+    +start_date: date
+    +enabled: bool
+  }
+
+  class "WateringSchedule" as BM_WateringSchedule {
+    +id: UUID
+    +name: str
+    +duration_seconds: int
+    +moisture_threshold_max: float?
+    +moisture_threshold_auto: float?
+    +moisture_auto_enabled: bool
+    +frequency_hours: int
+  }
+
+  class "WateringScheduleDate" as BM_WateringScheduleDate {
+    +schedule_id: UUID
+    +start_date: date
+    +enabled: bool
+  }
+
+  class "Log" as BM_Log {
+    +id: UUID
+    +device_id: UUID
+    +log_level: str
+    +message: str
+    +created_at: datetime
+  }
+
+  class "Alert" as BM_Alert {
+    +id: UUID
+    +device_id: UUID
+    +alert_type: str
+    +severity: str
+    +message: str
+    +resolved: bool
+    +created_at: datetime
+    +resolved_at: datetime?
+  }
+}
+
+BM_SensorReading }o-- BM_Device : sensor_id
+BM_Log }o-- BM_Device : device_id
+BM_Alert }o-- BM_Device : device_id
+BM_LightScheduleDate }o-- BM_LightSchedule : schedule_id
+BM_WateringScheduleDate }o-- BM_WateringSchedule : schedule_id
+
+package "backend.schemas (Pydantic)" {
+  enum "DeviceType" as BS_DeviceType
+  enum "LogLevel" as BS_LogLevel
+  enum "AlertSeverity" as BS_AlertSeverity
+
+  class "DeviceBase" as BS_DeviceBase
+  class "DeviceCreate" as BS_DeviceCreate
+  class "DeviceUpdate" as BS_DeviceUpdate
+  class "Device" as BS_Device
+
+  class "SensorReadingBase" as BS_SensorReadingBase
+  class "SensorReadingCreate" as BS_SensorReadingCreate
+  class "SensorReading" as BS_SensorReading
+
+  class "LightScheduleBase" as BS_LightScheduleBase
+  class "LightScheduleCreate" as BS_LightScheduleCreate
+  class "LightScheduleUpdate" as BS_LightScheduleUpdate
+  class "LightSchedule" as BS_LightSchedule
+  class "LightScheduleDateBase" as BS_LightScheduleDateBase
+  class "LightScheduleDate" as BS_LightScheduleDate
+
+  class "WateringScheduleBase" as BS_WateringScheduleBase
+  class "WateringScheduleCreate" as BS_WateringScheduleCreate
+  class "WateringScheduleUpdate" as BS_WateringScheduleUpdate
+  class "WateringSchedule" as BS_WateringSchedule
+  class "WateringScheduleDateBase" as BS_WateringScheduleDateBase
+  class "WateringScheduleDate" as BS_WateringScheduleDate
+
+  class "LogBase" as BS_LogBase
+  class "LogCreate" as BS_LogCreate
+  class "Log" as BS_Log
+
+  class "AlertBase" as BS_AlertBase
+  class "AlertCreate" as BS_AlertCreate
+  class "AlertUpdate" as BS_AlertUpdate
+  class "Alert" as BS_Alert
+}
+
+BS_DeviceCreate --|> BS_DeviceBase
+BS_Device --|> BS_DeviceBase
+BS_SensorReadingCreate --|> BS_SensorReadingBase
+BS_SensorReading --|> BS_SensorReadingBase
+BS_LightScheduleCreate --|> BS_LightScheduleBase
+BS_LightSchedule --|> BS_LightScheduleBase
+BS_LightScheduleDate --|> BS_LightScheduleDateBase
+BS_WateringScheduleCreate --|> BS_WateringScheduleBase
+BS_WateringSchedule --|> BS_WateringScheduleBase
+BS_WateringScheduleDate --|> BS_WateringScheduleDateBase
+BS_LogCreate --|> BS_LogBase
+BS_Log --|> BS_LogBase
+BS_AlertCreate --|> BS_AlertBase
+BS_Alert --|> BS_AlertBase
+
+BS_DeviceBase ..> BS_DeviceType
+BS_LogBase ..> BS_LogLevel
+BS_AlertBase ..> BS_AlertSeverity
+
+package "backend API modules" {
+  class "main (FastAPI app)" as B_Main <<module>>
+  class "database" as B_Database <<module>>
+  class "redis_client" as B_Redis <<module>>
+
+  class "routers.devices" as BR_Devices <<router>>
+  class "routers.sensor_readings" as BR_SensorReadings <<router>>
+  class "routers.light_schedules" as BR_LightSchedules <<router>>
+  class "routers.watering_schedules" as BR_WateringSchedules <<router>>
+  class "routers.logs" as BR_Logs <<router>>
+  class "routers.alerts" as BR_Alerts <<router>>
+}
+
+B_Main ..> BR_Devices
+B_Main ..> BR_SensorReadings
+B_Main ..> BR_LightSchedules
+B_Main ..> BR_WateringSchedules
+B_Main ..> BR_Logs
+B_Main ..> BR_Alerts
+B_Main ..> B_Settings
+
+BR_Devices ..> B_Database
+BR_Devices ..> BM_Device
+BR_Devices ..> BS_Device
+BR_Devices ..> BS_DeviceCreate
+BR_Devices ..> BS_DeviceUpdate
+
+BR_SensorReadings ..> B_Database
+BR_SensorReadings ..> B_Redis
+BR_SensorReadings ..> B_Settings
+BR_SensorReadings ..> BM_SensorReading
+BR_SensorReadings ..> BM_Device
+BR_SensorReadings ..> BS_SensorReading
+BR_SensorReadings ..> BS_SensorReadingCreate
+
+BR_LightSchedules ..> B_Database
+BR_LightSchedules ..> BM_LightSchedule
+BR_LightSchedules ..> BM_LightScheduleDate
+BR_LightSchedules ..> BS_LightSchedule
+BR_LightSchedules ..> BS_LightScheduleCreate
+BR_LightSchedules ..> BS_LightScheduleUpdate
+BR_LightSchedules ..> BS_LightScheduleDate
+BR_LightSchedules ..> BS_LightScheduleDateBase
+
+BR_WateringSchedules ..> B_Database
+BR_WateringSchedules ..> BM_WateringSchedule
+BR_WateringSchedules ..> BM_WateringScheduleDate
+BR_WateringSchedules ..> BS_WateringSchedule
+BR_WateringSchedules ..> BS_WateringScheduleCreate
+BR_WateringSchedules ..> BS_WateringScheduleUpdate
+BR_WateringSchedules ..> BS_WateringScheduleDate
+BR_WateringSchedules ..> BS_WateringScheduleDateBase
+
+BR_Logs ..> B_Database
+BR_Logs ..> BM_Log
+BR_Logs ..> BM_Device
+BR_Logs ..> BS_Log
+BR_Logs ..> BS_LogCreate
+
+BR_Alerts ..> B_Database
+BR_Alerts ..> BM_Alert
+BR_Alerts ..> BM_Device
+BR_Alerts ..> BS_Alert
+BR_Alerts ..> BS_AlertCreate
+BR_Alerts ..> BS_AlertUpdate
+
+package "controller (C++)" {
+  enum "DeviceType" as C_DeviceType {
+    SENSOR
+    MOISTURE
+    LIGHT
+  }
+
+  class "device_type namespace" as C_DeviceTypeNS <<utility>> {
+    +parseRemoteDeviceType(deviceType)
+    +deviceTypeToString(type)
+  }
+
+  class "SensorReading" as C_SensorReading {
+    +deviceId: string
+    +timestamp: time_point
+    +value: double
+    +unit: string
+  }
+
+  abstract class "Device" as C_Device {
+    +id(): string
+    +name(): string
+    +location(): string
+    +firmware(): string
+    +enabled(): bool
+    +setEnabled(enabled)
+    +type(): DeviceType
+    +toString(): string
+    +fromJson(remoteDevice): unique_ptr<Device>
+  }
+
+  abstract class "SensorDevice" as C_SensorDevice {
+    +validateValue(value): bool
+    +unit(): string
+    +recordReading(value, timestamp): bool
+    +latestReading(): optional<SensorReading>
+    +readings(): vector<SensorReading>
+  }
+
+  class "GenericSensor" as C_GenericSensor
+  class "LightSensor" as C_LightSensor
+  class "MoistureSensor" as C_MoistureSensor
+
+  class "GreenhouseController" as C_Controller {
+    +registerDevice(device)
+    +removeDevice(deviceId)
+    +listDevices()
+    +listDevicesByType(type)
+    +findDevice(deviceId)
+    +recordSensorReading(deviceId, value, timestamp)
+    +latestReading(deviceId)
+  }
+
+  abstract class "HardwareSensor" as C_HardwareSensor {
+    +read(outValue): bool
+    +init(): bool
+  }
+
+  class "FixedValueSensor" as C_FixedValueSensor {
+    -value_: double
+  }
+
+  abstract class "ApiClient" as C_ApiClient {
+    +getDevices(): optional<string>
+    +postSensorReading(remoteSensorId, reading): bool
+  }
+
+  class "RestApiClient" as C_RestApiClient {
+    -baseUrl_: string
+    -logger_: shared_ptr<Logger>
+  }
+
+  class "SensorRuntime" as C_Runtime {
+    +bindSensor(localDeviceId, remoteSensorId, hardware): bool
+    +pollOnce(localDeviceId): bool
+    +pollAllOnce(): size_t
+    +getAndBindNewRemoteSensors(): bool
+  }
+
+  enum "LogLevel" as C_LogLevel {
+    Debug
+    Info
+    Warning
+    Error
+    Critical
+  }
+
+  class "Logger" as C_Logger {
+    +debug(msg)
+    +info(msg)
+    +warning(msg)
+    +error(msg)
+    +critical(msg)
+  }
+
+  class "Utils namespace" as C_Utils <<utility>> {
+    +jsonStringOrEmpty(object, key): string
+  }
+}
+
+C_Device ..> C_DeviceType
+C_Device ..> C_DeviceTypeNS
+C_Device ..> C_Utils
+C_SensorDevice --|> C_Device
+C_GenericSensor --|> C_SensorDevice
+C_LightSensor --|> C_SensorDevice
+C_MoistureSensor --|> C_SensorDevice
+C_SensorDevice o-- "0..*" C_SensorReading
+
+C_Controller o-- "0..*" C_Device
+C_Controller ..> C_SensorDevice
+C_Controller ..> C_SensorReading
+
+C_FixedValueSensor --|> C_HardwareSensor
+C_RestApiClient --|> C_ApiClient
+C_RestApiClient --> C_Logger
+C_RestApiClient ..> C_SensorReading
+
+C_Runtime --> C_Controller
+C_Runtime --> C_ApiClient
+C_Runtime --> C_Logger
+C_Runtime o-- "0..*" C_HardwareSensor
+
+C_Logger ..> C_LogLevel
+
+package "frontend" {
+  class "(no source files detected)" as FE_Empty <<note>>
+}
+
+' Cross-project integration path
+C_RestApiClient ..> BR_Devices : HTTP GET /devices/
+C_RestApiClient ..> BR_SensorReadings : HTTP POST /sensor-readings/
+
+@enduml

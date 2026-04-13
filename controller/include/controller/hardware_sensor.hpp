@@ -8,6 +8,8 @@ public:
 
     // Returns true when a value was successfully read from hardware.
     virtual bool read(double& outValue) = 0;
+    
+    virtual bool init() = 0;
 };
 
 } // namespace greenhouse

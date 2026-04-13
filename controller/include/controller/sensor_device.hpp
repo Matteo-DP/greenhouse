@@ -24,7 +24,9 @@ public:
         }
 
         SensorReading reading;
-        reading.deviceId = id();
+        reading.deviceId = id(); // TODO: is this local id?
+        // store readings based on database Id 
+        // reading.deviceId = remoteDeviceId;
         reading.timestamp = timestamp;
         reading.value = value;
         reading.unit = unit();

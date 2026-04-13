@@ -3,7 +3,7 @@
 
 namespace Utils {
 
-std::string jsonStringOrEmpty(const nlohmann::json& object, const char* key) {
+inline std::string jsonStringOrEmpty(const nlohmann::json& object, const char* key) {
     const auto it = object.find(key);
     if (it == object.end() || it->is_null()) {
         return {};

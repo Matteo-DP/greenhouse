@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 
 add_library(greenhouse_controller_lib
     src/controller.cpp
+    src/device.cpp
     src/logger.cpp
     src/runtime.cpp
     src/rest_api_client.cpp
