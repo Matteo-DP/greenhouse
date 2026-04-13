@@ -85,7 +85,7 @@ namespace greenhouse {
 bool SensorRuntime::bindSensor(
     std::string localDeviceId,
     std::string remoteSensorId,
-    std::unique_ptr<HardwareSensor> hardware) {
+    std::unique_ptr<SensorDevice> hardware) {
     if (localDeviceId.empty() || remoteSensorId.empty() || !hardware) {
         return false;
     }
@@ -102,7 +102,7 @@ bool SensorRuntime::bindSensor(
 
     bindings_[std::move(localDeviceId)] = SensorBinding{
         .remoteSensorId = std::move(remoteSensorId),
-        .hardware = std::move(hardware),
+        .device = std::move(hardware),
     };
 
     return true;
@@ -179,7 +179,7 @@ bool SensorRuntime::pollOnce(const std::string& localDeviceId) {
     }
 
     double value = 0.0;
-    if (!bindingIt->second.hardware->read(value)) {
+    if (!bindingIt->second.device->hardware()->read(value)) {
         return false;
     }
 
