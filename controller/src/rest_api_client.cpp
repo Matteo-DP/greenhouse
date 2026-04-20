@@ -132,17 +132,14 @@ std::optional<std::string> extractIdFromJson(const std::string& jsonText) {
 
 } // namespace
 
-RestApiClient::RestApiClient(std::string baseUrl, std::shared_ptr<Logger> logger)
-    : baseUrl_(std::move(baseUrl)), logger_(std::move(logger)) {
-    if (!logger_) {
-        logger_ = std::make_shared<Logger>();
-    }
+RestApiClient::RestApiClient(std::string baseUrl, Logger& logger)
+    : baseUrl_(std::move(baseUrl)), logger_(logger) {
 
     const auto initCode = curl_global_init(CURL_GLOBAL_DEFAULT);
     if (initCode != CURLE_OK) {
-        logger_->critical("Failed to initialize libcurl global state.");
+        logger_.critical("Failed to initialize libcurl global state.");
     } else {
-        logger_->info("REST API client initialized for " + baseUrl_);
+        logger_.info("REST API client initialized for " + baseUrl_);
     }
 }
 
@@ -152,14 +149,14 @@ RestApiClient::~RestApiClient() {
 
 std::optional<std::string> RestApiClient::getDevices() {
     std::string response;
-    const auto status = getJson(baseUrl_ + "/devices/", response, *logger_);
+    const auto status = getJson(baseUrl_ + "/devices/", response, logger_);
     if (!status.has_value()) {
-        logger_->error("GET /devices/ failed: libcurl error.");
+        logger_.error("GET /devices/ failed: libcurl error.");
         return std::nullopt;
     }
 
     if (*status < 200 || *status >= 300) {
-        logger_->warning("GET /devices/ returned HTTP " + std::to_string(*status));
+        logger_.warning("GET /devices/ returned HTTP " + std::to_string(*status));
         return std::nullopt;
     }
 
@@ -199,8 +196,6 @@ std::optional<std::string> RestApiClient::getDevices() {
 // }
 
 bool RestApiClient::postSensorReading(const std::string& remoteSensorId, const SensorReading& reading) {
-    logger_->debug("Posting sensor reading for " + remoteSensorId);
-
     const nlohmann::json body = {
         {"sensor_id", remoteSensorId},
         {"time", toIso8601Utc(reading.timestamp)},
@@ -208,18 +203,18 @@ bool RestApiClient::postSensorReading(const std::string& remoteSensorId, const S
     };
 
     std::string response;
-    const auto status = postJson(baseUrl_ + "/sensor-readings/", body.dump(), response, *logger_);
+    const auto status = postJson(baseUrl_ + "/sensor-readings/", body.dump(), response, logger_);
     if (!status.has_value()) {
-        logger_->error("POST /sensor-readings failed for sensor " + remoteSensorId + ": libcurl error.");
+        logger_.error("POST /sensor-readings failed for sensor " + remoteSensorId + ": libcurl error.");
         return false;
     }
 
     if (*status < 200 || *status >= 300) {
-        logger_->warning("POST /sensor-readings/ returned HTTP " + std::to_string(*status) + " for sensor " + remoteSensorId);
+        logger_.warning("POST /sensor-readings/ returned HTTP " + std::to_string(*status) + " for sensor " + remoteSensorId);
         return false;
     }
 
-    logger_->info("Posted sensor reading for sensor " + remoteSensorId);
+    logger_.info("Posted sensor reading for sensor " + remoteSensorId);
     return true;
 }
 

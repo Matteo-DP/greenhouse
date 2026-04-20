@@ -15,7 +15,12 @@ enum class LogLevel {
 
 class Logger {
 public:
-    explicit Logger(LogLevel minimumLevel = LogLevel::Debug);
+    static Logger& getInstance();
+
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
+    Logger(Logger&&) = delete;
+    Logger& operator=(Logger&&) = delete;
 
     void setMinimumLevel(LogLevel minimumLevel);
 
@@ -26,6 +31,8 @@ public:
     void critical(const std::string& message);
 
 private:
+    Logger();
+
     void log(LogLevel level, const std::string& message);
 
     LogLevel minimumLevel_;

@@ -15,7 +15,7 @@ namespace greenhouse {
 class SensorRuntime {
 public:
     // TODO: remove controller from constructor
-    SensorRuntime(std::shared_ptr<ApiClient> apiClient, std::shared_ptr<Logger> logger)
+    SensorRuntime(std::shared_ptr<ApiClient> apiClient, Logger& logger = Logger::getInstance())
         : apiClient_(apiClient), logger_(logger) {}
 
     [[nodiscard]] std::vector<const SensorDevice*> listDevices() const;
@@ -29,6 +29,16 @@ public:
     
     // gets from db 
     bool getAndBindNewRemoteSensors();
+    
+    [[nodiscard]] const std::string toString() const {
+        std::string str;
+        str += std::to_string(bindings_.size()) + " bound devices:\n";
+        for (const auto& [localId, binding] : bindings_) {
+            str += "Local Device ID: " + localId + "\n";
+            str += binding.device->toString() + "\n";
+        }
+        return str;
+    }
 
 private:
     struct SensorBinding {
@@ -43,7 +53,7 @@ private:
     // GreenhouseController& controller_;
     std::shared_ptr<ApiClient> apiClient_;
     std::unordered_map<std::string, SensorBinding> bindings_; // <localDeviceId, SensorBinding>
-    std::shared_ptr<Logger> logger_;
+    Logger& logger_;
 };
 
 } // namespace greenhouse

@@ -3,7 +3,7 @@
 #include "controller/device.hpp"
 #include "controller/sensor_reading.hpp"
 #include "controller/hardware_sensor.hpp"
-#include "controller/mock_hardware_sensor.hpp"
+#include "controller/firmware_factory.hpp"
 
 #include <optional>
 #include <vector>
@@ -14,18 +14,20 @@ class SensorDevice : public Device {
 public:
     SensorDevice(std::string id, std::string name, std::string location, std::string firmware)
         : Device(std::move(id), std::move(name), std::move(location), std::move(firmware)) {
-            this->hardware_ = SensorDevice::getFirmwareByName(firmware);
+
+            FirmwareFactory& factory = FirmwareFactory::getInstance();
+            try {
+                this->hardware_ = std::move(factory.create(this->firmware()));
+            } catch (const std::runtime_error& e) {
+                Logger::getInstance().error("Defaulting to mock firmware for sensor " + this->name() + " due to error: " + e.what());
+                this->hardware_ = std::move(factory.create("mock"));
+            }
         }
 
     ~SensorDevice() override = default;
 
     virtual bool validateValue(double value) const noexcept = 0;
     [[nodiscard]] virtual std::string unit() const = 0;
-    
-    static std::unique_ptr<HardwareSensor> getFirmwareByName(const std::string& firmware) {
-        // TODO: actually return different HardwareSensor implementations based on the firmware string. For now, return a dummy one.
-        return std::make_unique<FixedValueSensor>(69.00);
-    }
 
     bool recordReading() {
         const auto timestamp = std::chrono::system_clock::now();

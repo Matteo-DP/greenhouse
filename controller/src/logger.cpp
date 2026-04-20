@@ -46,7 +46,12 @@ bool shouldLog(const LogLevel messageLevel, const LogLevel minimumLevel) {
 
 } // namespace
 
-Logger::Logger(LogLevel minimumLevel) : minimumLevel_(minimumLevel) {}
+Logger::Logger() : minimumLevel_(LogLevel::Debug) {}
+
+Logger& Logger::getInstance() {
+    static Logger instance;
+    return instance;
+}
 
 void Logger::setMinimumLevel(const LogLevel minimumLevel) {
     std::lock_guard lock(mutex_);

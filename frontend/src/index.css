@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Space Grotesk', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --background: #f8f7f3;
+  --foreground: #17201c;
+  --card: #fffcf5;
+  --card-foreground: #162219;
+  --popover: #fffcf5;
+  --popover-foreground: #162219;
+  --primary: #12684d;
+  --primary-foreground: #f2fff8;
+  --secondary: #e6f0d5;
+  --secondary-foreground: #1f2c20;
+  --muted: #edf2e6;
+  --muted-foreground: #4c5e56;
+  --accent: #d6ead9;
+  --accent-foreground: #1d2a23;
+  --destructive: #b6462a;
+  --destructive-foreground: #fff4f2;
+  --border: #c7d5c5;
+  --input: #cad7c8;
+  --ring: #1f9c75;
+}
+
+.dark {
+  --background: #0f1614;
+  --foreground: #dfeee7;
+  --card: #14211d;
+  --card-foreground: #e5f3eb;
+  --popover: #14211d;
+  --popover-foreground: #e5f3eb;
+  --primary: #5ec89a;
+  --primary-foreground: #0f1813;
+  --secondary: #1d2d27;
+  --secondary-foreground: #d5e8dd;
+  --muted: #1c2a25;
+  --muted-foreground: #9cb5aa;
+  --accent: #24382f;
+  --accent-foreground: #d8ece0;
+  --destructive: #e27d64;
+  --destructive-foreground: #1a0f0d;
+  --border: #30463d;
+  --input: #2f433a;
+  --ring: #65d9a8;
+}
+
+* {
+  @apply border-border;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  background-image:
+    radial-gradient(circle at 10% 5%, rgba(102, 176, 120, 0.2), transparent 30%),
+    radial-gradient(circle at 90% 10%, rgba(244, 183, 116, 0.24), transparent 26%),
+    radial-gradient(circle at 80% 85%, rgba(66, 152, 128, 0.2), transparent 30%);
+  background-attachment: fixed;
+}

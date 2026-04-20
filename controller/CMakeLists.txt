@@ -21,6 +21,7 @@ add_library(greenhouse_controller_lib
     src/logger.cpp
     src/runtime.cpp
     src/rest_api_client.cpp
+    src/firmware_factory.cpp
 )
 
 target_include_directories(greenhouse_controller_lib PUBLIC include)

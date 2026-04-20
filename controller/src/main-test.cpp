@@ -1,6 +1,3 @@
-#include <thread>
-#include <chrono>
-
 #include "controller/rest_api_client.hpp"
 #include "controller/runtime.hpp"
 
@@ -19,15 +16,11 @@ int main() {
 	
 	logger.debug(runtime.toString());
 
-	while (true) {
-		std::size_t pushedCount = runtime.pollAllOnce();
-		std::this_thread::sleep_for(std::chrono::steady_clock::duration(std::chrono::milliseconds(500)));
-		pushedCount = runtime.pollAllOnce();
-		
-		const std::size_t flushedCount = runtime.flushReadingsForAllDevices();
-
-		std::this_thread::sleep_for(std::chrono::steady_clock::duration(std::chrono::milliseconds(500)));
-	}
+	const std::size_t pushedCount = runtime.pollAllOnce();
+	logger.info("Captured readings for " + std::to_string(pushedCount) + " sensor(s).");	
+	
+	const std::size_t flushedCount = runtime.flushReadingsForAllDevices();
+	logger.info("Flushed " + std::to_string(flushedCount) + " readings to API.");
 
 	return 0;
 }
