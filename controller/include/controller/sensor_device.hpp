@@ -30,7 +30,7 @@ public:
     [[nodiscard]] virtual std::string unit() const = 0;
 
     bool recordReading() {
-        const auto timestamp = std::chrono::system_clock::now();
+        const auto timestamp = std::chrono::high_resolution_clock::now();
         double value = 0.0;
         
         if (this->hardware_ == nullptr) {

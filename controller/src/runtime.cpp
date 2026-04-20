@@ -206,17 +206,22 @@ std::size_t SensorRuntime::flushReadingsForDevice(const std::string& localDevice
     //         // cant: not with this type of loop
     //     }
     // }
-    std::size_t successCount = 0;
-    auto &readings = device->readings();
-    for (auto it = readings.begin(); it != readings.end(); ) {
-        if (apiClient_->postSensorReading(bindingIt->second.remoteSensorId, *it)) {
-            it = readings.erase(it);  // already moves to next
-            ++successCount;
-        } else {
-            ++it;
-        }
+    // std::size_t successCount = 0;
+    // auto &readings = device->readings();
+    // for (auto it = readings.begin(); it != readings.end(); ) {
+    //     if (apiClient_->postSensorReading(bindingIt->second.remoteSensorId, *it)) {
+    //         it = readings.erase(it);  // already moves to next
+    //         ++successCount;
+    //     } else {
+    //         ++it;
+    //     }
+    // }
+    if (apiClient_->postSensorReadings(device->readings())) {
+        std::size_t successCount = device->readings().size();
+        device->readings().clear();
+        return successCount;
     }
-    return successCount;
+    return 0;
 }
 
 std::size_t SensorRuntime::flushReadingsForAllDevices() {
@@ -261,6 +266,26 @@ std::size_t SensorRuntime::pollAllOnce() {
             ++successCount;
         }
     }
+    return successCount;
+}
+
+std::size_t SensorRuntime::pollAllOnceMaybeFlush() {
+    std::size_t totalUnflushedLogs = 0;
+    for (const auto& [localDeviceId, binding] : bindings_) {
+        totalUnflushedLogs += binding.device->readings().size();
+    }
+
+    std::size_t successCount = 0;
+    for (const auto& [localDeviceId, _] : bindings_) {
+        if (pollOnce(localDeviceId)) {
+            ++successCount;
+        }
+    }
+
+    if (successCount + totalUnflushedLogs > 10) {
+        successCount = flushReadingsForAllDevices();
+    }
+
     return successCount;
 }
 

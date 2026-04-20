@@ -23,6 +23,7 @@ public:
 
     // POST /sensor-readings with body: {sensor_id, time, value}
     virtual bool postSensorReading(const std::string& remoteSensorId, const SensorReading& reading) = 0;
+    virtual bool postSensorReadings(const std::vector<SensorReading>& readings) = 0;
 
     virtual bool postLogs(const std::vector<LogEntry>& logs) = 0;
 };

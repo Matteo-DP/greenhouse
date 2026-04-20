@@ -23,6 +23,7 @@ public:
 
     bool pollOnce(const std::string& localDeviceId);
     std::size_t pollAllOnce();
+    std::size_t pollAllOnceMaybeFlush();
     std::size_t flushReadingsForDevice(const std::string& localDeviceId);
     std::size_t flushReadingsForAllDevices();
     

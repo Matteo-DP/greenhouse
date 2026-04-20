@@ -11,8 +11,16 @@
 namespace greenhouse {
 namespace {
 
-std::string toIso8601Utc(const std::chrono::system_clock::time_point timestamp) {
-    const auto t = std::chrono::system_clock::to_time_t(timestamp);
+std::string toIso8601Utc(std::chrono::high_resolution_clock::time_point timestamp) {
+    using namespace std::chrono;
+
+    // Split into seconds + remainder
+    auto seconds = time_point_cast<std::chrono::seconds>(timestamp);
+    auto ms = duration_cast<std::chrono::milliseconds>(timestamp - seconds).count();
+
+    // Convert seconds to time_t
+    std::time_t t = high_resolution_clock::to_time_t(seconds);
+
     std::tm tm{};
 #ifdef _WIN32
     gmtime_s(&tm, &t);
@@ -21,7 +29,10 @@ std::string toIso8601Utc(const std::chrono::system_clock::time_point timestamp) 
 #endif
 
     std::ostringstream out;
-    out << std::put_time(&tm, "%FT%TZ");
+    out << std::put_time(&tm, "%FT%T")
+        << '.' << std::setw(3) << std::setfill('0') << ms
+        << 'Z';
+
     return out.str();
 }
 
@@ -241,6 +252,49 @@ bool RestApiClient::postSensorReading(const std::string& remoteSensorId, const S
     }
 
     logger_.info("Posted sensor reading for sensor " + remoteSensorId);
+    return true;
+}
+
+bool RestApiClient::postSensorReadings(const std::vector<SensorReading>& readings) {
+    nlohmann::json body = nlohmann::json::array();
+    for (const auto& reading : readings) {
+        body.push_back({
+            {"sensor_id", reading.deviceId},
+            {"time", toIso8601Utc(reading.timestamp)},
+            {"value", reading.value},
+        });
+    };
+
+    std::string response;
+    const auto status = postJson(baseUrl_ + "/sensor-readings/", body.dump(), response, logger_);
+    if (!status.has_value()) {
+        logger_.error("POST /sensor-readings/batch/ failed: libcurl error.");
+        return false;
+    }
+
+    if (*status < 200 || *status >= 300) {
+        logger_.warning("POST /sensor-readings/batch/ returned HTTP " + std::to_string(*status));
+        return false;
+    }
+
+    logger_.info("Posted " + std::to_string(readings.size()) + " sensor reading(s) to API.");
+    return true;
+}
+
+bool RestApiClient::testConnection() const {
+    std::string response;
+    const auto status = getJson(baseUrl_ + "/", response, logger_);
+    if (!status.has_value()) {
+        logger_.error("Connection test failed: libcurl error.");
+        return false;
+    }
+
+    if (*status < 200 || *status >= 300) {
+        logger_.warning("Connection test returned HTTP " + std::to_string(*status));
+        return false;
+    }
+
+    logger_.info("Connection test succeeded with HTTP " + std::to_string(*status));
     return true;
 }
 
