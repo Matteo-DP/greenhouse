@@ -132,14 +132,12 @@ std::optional<std::string> extractIdFromJson(const std::string& jsonText) {
 
 } // namespace
 
-RestApiClient::RestApiClient(std::string baseUrl, Logger& logger)
-    : baseUrl_(std::move(baseUrl)), logger_(logger) {
-
+RestApiClient::RestApiClient() {
     const auto initCode = curl_global_init(CURL_GLOBAL_DEFAULT);
     if (initCode != CURLE_OK) {
-        logger_.critical("Failed to initialize libcurl global state.");
+        Logger::getInstance().critical("Failed to initialize libcurl global state.");
     } else {
-        logger_.info("REST API client initialized for " + baseUrl_);
+        Logger::getInstance().info("REST API client initialized for " + baseUrl_);
     }
 }
 
@@ -149,14 +147,14 @@ RestApiClient::~RestApiClient() {
 
 std::optional<std::string> RestApiClient::getDevices() {
     std::string response;
-    const auto status = getJson(baseUrl_ + "/devices/", response, logger_);
+    const auto status = getJson(baseUrl_ + "/devices/", response, Logger::getInstance());
     if (!status.has_value()) {
-        logger_.error("GET /devices/ failed: libcurl error.");
+        Logger::getInstance().error("GET /devices/ failed: libcurl error.");
         return std::nullopt;
     }
 
     if (*status < 200 || *status >= 300) {
-        logger_.warning("GET /devices/ returned HTTP " + std::to_string(*status));
+        Logger::getInstance().warning("GET /devices/ returned HTTP " + std::to_string(*status));
         return std::nullopt;
     }
 
@@ -164,7 +162,7 @@ std::optional<std::string> RestApiClient::getDevices() {
 }
 
 // std::optional<std::string> RestApiClient::createDevice(const CreateDeviceRequest& request) {
-//     logger_->debug("Creating device in backend: " + request.name + " [" + deviceTypeToString(request.deviceType) + "]");
+//     Logger::getInstance().>debug("Creating device in backend: " + request.name + " [" + deviceTypeToString(request.deviceType) + "]");
 
 //     const nlohmann::json body = {
 //         {"name", request.name},
@@ -175,23 +173,23 @@ std::optional<std::string> RestApiClient::getDevices() {
 
 //     std::string response;
 //     const auto url = baseUrl_ + "/devices/";
-//     const auto status = postJson(url, body.dump(), response, *logger_);
+//     const auto status = postJson(url, body.dump(), response, *Logger::getInstance().;
 //     if (!status.has_value() || *status < 200 || *status >= 300) {
 //         if (!status.has_value()) {
-//             logger_->error("POST /devices/ failed for " + request.name + ": libcurl error.");
+//             Logger::getInstance().>error("POST /devices/ failed for " + request.name + ": libcurl error.");
 //         } else {
-//             logger_->warning("POST /devices/ returned HTTP " + std::to_string(*status) + " for " + request.name);
+//             Logger::getInstance().>warning("POST /devices/ returned HTTP " + std::to_string(*status) + " for " + request.name);
 //         }
 //         return std::nullopt;
 //     }
 
 //     const auto remoteId = extractIdFromJson(response);
 //     if (!remoteId.has_value()) {
-//         logger_->warning("POST /devices/ succeeded but response did not contain an id for " + request.name);
+//         Logger::getInstance().>warning("POST /devices/ succeeded but response did not contain an id for " + request.name);
 //         return std::nullopt;
 //     }
 
-//     logger_->info("Created remote device " + request.name + " with id " + *remoteId);
+//     Logger::getInstance().>info("Created remote device " + request.name + " with id " + *remoteId);
 //     return remoteId;
 // }
 
@@ -203,18 +201,18 @@ bool RestApiClient::postSensorReading(const std::string& remoteSensorId, const S
     };
 
     std::string response;
-    const auto status = postJson(baseUrl_ + "/sensor-readings/", body.dump(), response, logger_);
+    const auto status = postJson(baseUrl_ + "/sensor-readings/", body.dump(), response, Logger::getInstance());
     if (!status.has_value()) {
-        logger_.error("POST /sensor-readings failed for sensor " + remoteSensorId + ": libcurl error.");
+        Logger::getInstance().error("POST /sensor-readings failed for sensor " + remoteSensorId + ": libcurl error.");
         return false;
     }
 
     if (*status < 200 || *status >= 300) {
-        logger_.warning("POST /sensor-readings/ returned HTTP " + std::to_string(*status) + " for sensor " + remoteSensorId);
+        Logger::getInstance().warning("POST /sensor-readings/ returned HTTP " + std::to_string(*status) + " for sensor " + remoteSensorId);
         return false;
     }
 
-    logger_.info("Posted sensor reading for sensor " + remoteSensorId);
+    Logger::getInstance().info("Posted sensor reading for sensor " + remoteSensorId);
     return true;
 }
 
