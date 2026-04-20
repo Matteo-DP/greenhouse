@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 2,
   "links": [],
   "panels": [
     {
@@ -167,12 +167,12 @@
     "list": []
   },
   "time": {
-    "from": "now-12h",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Greenhouse",
   "uid": "adrckz9",
-  "version": 2
+  "version": 1
 }
