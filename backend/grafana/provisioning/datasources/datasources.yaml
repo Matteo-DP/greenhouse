@@ -1,0 +1,29 @@
+apiVersion: 1
+
+datasources:
+  - name: greenhouse-postgresql-datasource
+    type: postgres
+    uid: dfjnc9agvb5kwa
+    access: proxy
+    url: postgres:5432
+    database: ${POSTGRES_DB}
+    user: ${POSTGRES_USER}
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1500
+      timescaledb: true
+    isDefault: true
+
+  - name: greenhouse-redis-datasource
+    type: redis-datasource
+    access: proxy
+    uid: efjndr662skcgd
+    url: ${REDIS_URL}
+    jsonData:
+      defaultDatabase: 0
+      serverName: "Greenhouse Redis"
+      tlsAuth: false
+      tlsAuthWithCACert: false
+      tlsSkipVerify: true
