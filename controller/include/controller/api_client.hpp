@@ -21,7 +21,6 @@ public:
 
     // POST /sensor-readings with body: {sensor_id, time, value}
     virtual bool postSensorReading(const std::string& remoteSensorId, const SensorReading& reading) = 0;
-    
 };
 
 } // namespace greenhouse

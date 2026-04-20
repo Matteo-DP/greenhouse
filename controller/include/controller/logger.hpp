@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <mutex>
 #include <string>
 
@@ -16,6 +17,8 @@ enum class LogLevel {
 class Logger {
 public:
     static Logger& getInstance();
+
+    bool flushAndPushLogs();
 
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
@@ -37,6 +40,8 @@ private:
 
     LogLevel minimumLevel_;
     std::mutex mutex_;
+
+    std::vector<std::string> logs;
 };
 
 } // namespace greenhouse

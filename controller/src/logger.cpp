@@ -5,9 +5,15 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 namespace greenhouse {
 namespace {
+
+bool Logger::flushAndPushLogs() {
+    throw std::runtime_error("Not implemented yet");
+    return false;
+}
 
 std::string levelToString(const LogLevel level) {
     switch (level) {
