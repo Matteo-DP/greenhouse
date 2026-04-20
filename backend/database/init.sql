@@ -83,10 +83,9 @@ CREATE TABLE IF NOT EXISTS watering_schedules_dates (
 
 CREATE TABLE IF NOT EXISTS logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
     log_level TEXT NOT NULL CHECK (log_level IN ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')),
     message TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Alerts table for system notifications
@@ -103,3 +102,7 @@ CREATE TABLE IF NOT EXISTS alerts (
 
 CREATE INDEX IF NOT EXISTS idx_alerts_device_id ON alerts(device_id);
 CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON alerts(resolved);
+
+--  test device
+INSERT INTO devices (name, description, device_type, location, firmware, unit) VALUES
+('Test Sensor', 'A sensor for testing', 'SENSOR', 'Greenhouse', 'mock', '°C');

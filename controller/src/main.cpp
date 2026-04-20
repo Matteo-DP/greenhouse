@@ -10,6 +10,7 @@ int main() {
 	auto& logger = Logger::getInstance();
 	logger.setMinimumLevel(LogLevel::Debug);
 	auto apiClient = std::make_shared<RestApiClient>("http://localhost:8000");
+	Logger::setApiClient(apiClient);
     SensorRuntime runtime(apiClient);
 	
 	if (!runtime.getAndBindNewRemoteSensors()) {

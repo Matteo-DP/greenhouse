@@ -1,9 +1,11 @@
 #pragma once
 
 #include "controller/device_type.hpp"
+#include "controller/log_entry.hpp"
 #include "controller/sensor_reading.hpp"
 
 #include <optional>
+#include <vector>
 #include <string>
 
 namespace greenhouse {
@@ -21,6 +23,8 @@ public:
 
     // POST /sensor-readings with body: {sensor_id, time, value}
     virtual bool postSensorReading(const std::string& remoteSensorId, const SensorReading& reading) = 0;
+
+    virtual bool postLogs(const std::vector<LogEntry>& logs) = 0;
 };
 
 } // namespace greenhouse

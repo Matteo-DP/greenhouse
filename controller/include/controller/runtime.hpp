@@ -14,7 +14,6 @@ namespace greenhouse {
 
 class SensorRuntime {
 public:
-    // TODO: remove controller from constructor
     SensorRuntime(std::shared_ptr<ApiClient> apiClient, Logger& logger = Logger::getInstance())
         : apiClient_(apiClient), logger_(logger) {}
 

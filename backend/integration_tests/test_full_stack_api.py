@@ -192,37 +192,25 @@ def test_full_stack_watering_schedules_crud_and_dates() -> None:
 
 
 def test_full_stack_logs_endpoints() -> None:
-    device = requests.post(
-        f"{BASE_URL}/devices/",
-        json={
-            "name": f"pump-{uuid4()}",
-            "description": "pump device",
-            "device_type": "PUMP",
-            "location": "zone-1",
-        },
-        timeout=TIMEOUT,
-    )
-    assert device.status_code == 201
-    device_id = device.json()["id"]
-
     created = requests.post(
-        f"{BASE_URL}/logs/?device_id={device_id}",
-        json={"log_level": "INFO", "message": "pump started"},
+        f"{BASE_URL}/logs/",
+        json=[
+            {"log_level": "INFO", "message": "pump started", "timestamp": "2026-04-20T18:21:35Z"},
+            {"log_level": "ERROR", "message": "pump stalled", "timestamp": "2026-04-20T18:21:36Z"},
+        ],
         timeout=TIMEOUT,
     )
     assert created.status_code == 201
-    log_id = created.json()["id"]
+    created_logs = created.json()
+    assert len(created_logs) == 2
+    log_id = created_logs[0]["id"]
 
-    listed = requests.get(f"{BASE_URL}/logs/?device_id={device_id}&log_level=INFO", timeout=TIMEOUT)
+    listed = requests.get(f"{BASE_URL}/logs/?log_level=INFO", timeout=TIMEOUT)
     assert listed.status_code == 200
     assert any(l["id"] == log_id for l in listed.json())
 
     fetched = requests.get(f"{BASE_URL}/logs/{log_id}", timeout=TIMEOUT)
     assert fetched.status_code == 200
-
-    by_device = requests.get(f"{BASE_URL}/logs/device/{device_id}", timeout=TIMEOUT)
-    assert by_device.status_code == 200
-    assert any(l["id"] == log_id for l in by_device.json())
 
 
 def test_full_stack_alerts_crud() -> None:

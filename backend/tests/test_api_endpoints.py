@@ -167,34 +167,37 @@ def test_watering_schedules_crud_and_dates_endpoints(client):
 
 
 def test_logs_endpoints(client):
-    device = _create_device(client, name="Pump 1", device_type="PUMP")
-    device_id = device["id"]
-
     created = client.post(
-        f"/logs/?device_id={device_id}",
-        json={
-            "log_level": "INFO",
-            "message": "Pump started",
-        },
+        "/logs/",
+        json=[
+            {
+                "log_level": "INFO",
+                "message": "Pump started",
+                "timestamp": "2026-04-20T18:21:35Z",
+            },
+            {
+                "log_level": "ERROR",
+                "message": "Pump stalled",
+                "timestamp": "2026-04-20T18:21:36Z",
+            },
+        ],
     )
     assert created.status_code == 201
-    log_id = created.json()["id"]
+    created_logs = created.json()
+    assert len(created_logs) == 2
+    log_id = created_logs[0]["id"]
 
     listed = client.get("/logs/")
     assert listed.status_code == 200
     assert any(l["id"] == log_id for l in listed.json())
 
-    filtered = client.get(f"/logs/?device_id={device_id}&log_level=INFO")
+    filtered = client.get("/logs/?log_level=INFO")
     assert filtered.status_code == 200
-    assert len(filtered.json()) == 1
+    assert any(l["id"] == log_id for l in filtered.json())
 
     fetched = client.get(f"/logs/{log_id}")
     assert fetched.status_code == 200
     assert fetched.json()["message"] == "Pump started"
-
-    by_device = client.get(f"/logs/device/{device_id}")
-    assert by_device.status_code == 200
-    assert len(by_device.json()) == 1
 
 
 def test_alerts_crud_endpoints(client):

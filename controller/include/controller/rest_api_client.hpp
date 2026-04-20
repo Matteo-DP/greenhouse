@@ -12,11 +12,14 @@ public:
     explicit RestApiClient(std::string baseUrl, Logger& logger = Logger::getInstance());
     ~RestApiClient() override;
 
+    // GET /devices to fetch all devices, then for any new sensors, bind them to local hardware sensors if possible. This allows dynamic addition of devices from the backend without needing to restart the controller.
     std::optional<std::string> getDevices() override;
+
     // std::optional<std::string> createDevice(const CreateDeviceRequest& request) override;
     bool postSensorReading(const std::string& remoteSensorId, const SensorReading& reading) override;
 
-    // GET /devices to fetch all devices, then for any new sensors, bind them to local hardware sensors if possible. This allows dynamic addition of devices from the backend without needing to restart the controller.
+    // POST logs to /logs/
+    bool postLogs(const std::vector<LogEntry>& logs) override;
 private:
     std::string baseUrl_;
     Logger& logger_;

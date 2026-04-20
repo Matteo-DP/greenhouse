@@ -153,12 +153,11 @@ class LogBase(BaseModel):
     message: str
 
 class LogCreate(LogBase):
-    pass
+    timestamp: datetime
 
 class Log(LogBase):
     id: UUID
-    device_id: UUID
-    created_at: datetime
+    timestamp: datetime
     
     class Config:
         from_attributes = True

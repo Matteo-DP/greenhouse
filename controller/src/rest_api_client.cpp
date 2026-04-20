@@ -147,6 +147,32 @@ RestApiClient::~RestApiClient() {
     curl_global_cleanup();
 }
 
+bool RestApiClient::postLogs(const std::vector<LogEntry>& logs) {
+    nlohmann::json body = nlohmann::json::array();
+    for (const auto& log : logs) {
+        body.push_back({
+            {"log_level", Logger::levelToString(log.level)},
+            {"message", log.message},
+            {"timestamp", toIso8601Utc(log.timestamp)},
+        });
+    };
+
+    std::string response;
+    const auto status = postJson(baseUrl_ + "/logs/", body.dump(), response, logger_);
+    if (!status.has_value()) {
+        logger_.error("POST /logs/ failed: libcurl error.", true);
+        return false;
+    }
+
+    if (*status < 200 || *status >= 300) {
+        logger_.error("POST /logs/ returned HTTP " + std::to_string(*status), true);
+        return false;
+    }
+
+    logger_.info("Posted " + std::to_string(logs.size()) + " log(s) to API.", true);
+    return true;
+}
+
 std::optional<std::string> RestApiClient::getDevices() {
     std::string response;
     const auto status = getJson(baseUrl_ + "/devices/", response, logger_);
